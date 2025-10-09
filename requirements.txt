@@ -1,0 +1,7 @@
+fastapi==0.115.0        # Main web framework for building APIs
+uvicorn[standard]==0.30.6 # ASGI server to run FastAPI
+sqlmodel==0.0.22        # ORM + Pydantic for models and DB
+requests==2.32.3        # For black-box testing or making HTTP requests
+pytest==8.3.2           # Testing framework
+httpx==0.24.1           # Async client for FastAPI tests
+alembic==1.13.2
