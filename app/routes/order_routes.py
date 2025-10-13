@@ -20,8 +20,10 @@ def list_orders(session: Session = Depends(get_session),
                 current_user = Depends(get_current_user),
                 skip: int = Query(0, ge=0), 
                 limit: int = Query(10, ge=1),
-                status: Optional[OrderStatus] = Query(None)):
-    return order_api.list_orders(session,skip,limit,status,current_user)
+                status: Optional[OrderStatus] = Query(None),
+                date_from: Optional[str] = Query(None),
+                date_to: Optional[str] = Query(None)):
+    return order_api.list_orders(session,skip,limit,status,date_from,date_to,current_user)
 
 @router.post('/', response_model=Order)
 def create_order(order_in: order_validator.OrderCreate, session: Session = Depends(get_session),
@@ -32,7 +34,7 @@ def create_order(order_in: order_validator.OrderCreate, session: Session = Depen
 @router.get('/{id}', response_model=Order)
 def get_order(id: int, session: Session = Depends(get_session),
               current_user = Depends(get_current_user)):
-    return order_api.get_order(session, id=id)
+    return order_api.get_order(session, id=id, current_user=current_user)
 
 # @router.put('/{id}', response_model=models.Order)
 # def update_order(id: int, order_update: order_validator.OrderUpdate, session: Session = Depends(get_session)):
@@ -47,3 +49,8 @@ def delete_order(id: int, session: Session = Depends(get_session),
 def mark_order_paid(id: int, session: Session = Depends(get_session),
                     current_user = Depends(get_current_user)):
     return order_api.mark_order_paid(session, id=id)
+
+@router.get('/{id}/perticular-user', response_model=OrderListResponse)
+def list_user_order(id: int,skip: int = Query(0, ge=0), limit: int = Query(10, ge=1) ,session: Session = Depends(get_session),
+                    current_user = Depends(get_current_user)):
+    return order_api.list_user_order(session, id=id,skip=skip,limit=limit, current_user=current_user)

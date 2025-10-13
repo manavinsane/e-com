@@ -9,6 +9,12 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     GROQ_API_KEY: str
     DATABASE_URL: str
+    MAIL_FROM: str
+    MAIL_PASSWORD: str
+    MAIL_SERVER: str
+    MAIL_PORT: int
+    MAIL_USERNAME: str
+    
 
     model_config = SettingsConfigDict(env_file=".env")  # correct way in v2
 

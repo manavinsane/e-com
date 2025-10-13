@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks, Query
 from app.api import user as user_api
 from ..validators.user_validator import UserRead, UserCreate
 from sqlmodel import Session
 from app.db.database import get_session
 from ..validators import user_validator
 from app.api.user import get_current_user
+from app.utils.email_util import send_email
 
 
 router = APIRouter(prefix='/users', tags=['users'])
@@ -25,3 +26,14 @@ def login_user(user_in: user_validator.UserLogin, session: Session = Depends(get
 def logout_user(session: Session = Depends(get_session),
                 current_user = Depends(get_current_user)):
     return user_api.logout_user(session, current_user)
+
+@router.post('/send-email')
+async def send_test(background_tasks: BackgroundTasks, recipients: list[str] = Query(...)):
+    await send_email(
+        subject="Welcome to FastAPI-Mail 🚀",
+        recipients=recipients,
+        body="<h1>Hello from FastAPI!</h1><p>This is a test email.</p>",
+        background_tasks=background_tasks,
+        html=True
+    )
+    return {"message": "Email sent"}

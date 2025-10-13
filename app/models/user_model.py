@@ -1,6 +1,8 @@
-from sqlmodel import SQLModel, Field, Enum as SqlEnum, Column
-from typing import Optional
+from sqlmodel import SQLModel, Field, Enum as SqlEnum, Column, Relationship
+from typing import Optional,List
 from datetime import datetime
+
+
 from app.enums.enums import UserRoles
 
 
@@ -20,3 +22,4 @@ class User(SQLModel, table=True):
     refresh_token: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+    orders : List["Order"] = Relationship(back_populates="created_by")
