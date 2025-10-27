@@ -134,7 +134,7 @@ def login_user(session: Session, user_in: UserLogin) -> User:
         session.refresh(user)
         return user
     except Exception as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e.detail))
+        raise HTTPException(status_code=400, detail=str(e))
 
 def logout_user(session: Session, user_id: int):
     try:

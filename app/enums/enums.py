@@ -12,3 +12,7 @@ class UserRoles(enum.Enum):
     CUSTOMER = "CUSTOMER"
     SELLER = "SELLER"
 
+class SocialAccounts(enum.Enum):
+    GOOGLE = "GOOGLE"
+    MICROSOFT = "MICROSOFT"
+

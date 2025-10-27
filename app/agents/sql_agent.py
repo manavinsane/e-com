@@ -1,15 +1,40 @@
 import psycopg2
 from groq import Groq
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 from langchain_core.tools import tool
 from app.core.config import GROQ_API_KEY
 from typing import Dict, Any
 from app.config.config import Settings
 from langchain_community.tools import DuckDuckGoSearchRun
 from ..db.database import get_session
-from sqlmodel import text
+from sqlmodel import text, Session
+
+from app.validators import user_validator
+from app.api import user as user_api
 
 client = Groq(api_key=GROQ_API_KEY)
+
+@tool
+def login_user(email:str = None, username:str=None ,password:str= None):
+    """Takes a username or email and password and logs the user in"""
+    try:
+        if not password:
+            raise HTTPException(status_code=400, detail="Password is required")
+        data= {"password": password}
+        if email:
+            data[email] = email
+        if username:
+            data["username"] = username
+        else:
+            raise HTTPException(status_code=400, detail="Username or Email is required")
+        user_in = user_validator.UserLogin(**data)
+        # breakpoint()
+        session = next(get_session())
+        result = user_api.login_user(session = session, user_in=user_in)
+        # breakpoint()
+        return {"success": True, "data": result}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 @tool

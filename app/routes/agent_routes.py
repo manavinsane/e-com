@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from app.agents.sql_agent import generate_and_execute_select_query, fetch_database_schema
-from app.agents.sql_agent import fetch_database_schema, generate_and_execute_select_query, search_web
+from app.agents.sql_agent import fetch_database_schema, generate_and_execute_select_query, search_web, login_user
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
+from app.db.database import get_session
+from sqlmodel import Session
+# from sqlmodel import Session
 
 router = APIRouter()
 
@@ -32,10 +35,29 @@ Remember: Don't use tools unnecessarily. Your knowledge is extensive - use it!""
     ("placeholder", "{agent_scratchpad}"),
 ])
 
-tools = [search_web, fetch_database_schema, generate_and_execute_select_query]
+agent_prompt2 = ChatPromptTemplate.from_messages([
+    ('system',     """
+    Accepts a natural language text in which required login credenntials are there.
+    1. Extract login credentials from prompt(key name is username or email, password)
+    2. use login api to get token
+    3. return appropriate results
+    """),
+    ("human", "{input}"),
+    ("placeholder", "{agent_scratchpad}"),
+])
+
+tools = [search_web, fetch_database_schema, generate_and_execute_select_query, login_user]
 agent = create_tool_calling_agent(llm, tools, agent_prompt)
+agent2 = create_tool_calling_agent(llm, tools, agent_prompt2)
 agent_executor = AgentExecutor(
     agent=agent,
+    tools=tools,
+    verbose=True,
+    handle_parsing_errors=True,
+    max_iterations=5
+)
+agent_executor2 = AgentExecutor(
+    agent=agent2,
     tools=tools,
     verbose=True,
     handle_parsing_errors=True,
@@ -69,6 +91,39 @@ def smart_analytic(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+@router.get("/agent/login")
+def login_agent(
+    prompt: str = Query(..., description="enter your info to authenticate")
+):
+    """
+    Accepts a natural language prompt in which required login credenntials are there.
+    1. Extract login credentials from prompt(key name is username or email, password)
+    2. use login api to get token
+    3. return appropriate results
+    """
+    try:
+        # Invoke the agent - it will decide which tools to call
+        result = agent_executor2.invoke({"input": prompt})
+        
+        # Extract the final output
+        output = result.get("output", "")
+        
+        return {
+            "success": True,
+            "prompt": prompt,
+            "answer": output,
+            "tools_used": [step[0].tool for step in result.get("intermediate_steps", [])],
+            "intermediate_steps": [
+                {
+                    "tool": step[0].tool,
+                    "tool_input": step[0].tool_input,
+                    "output": str(step[1])[:500]  # Truncate for readability
+                }
+                for step in result.get("intermediate_steps", [])
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/smart-analytics")
