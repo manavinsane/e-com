@@ -3,7 +3,7 @@ from langchain_core.messages import AnyMessage, HumanMessage, ToolMessage
 from langchain_groq import ChatGroq
 # from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.graph import StateGraph, END, START
-from app.core.config import GROQ_API_KEY
+from app.core.config import GROQ_API_KEY, OPENAI_API_KEY
 from app.api.product import LLM_TOOLS
 from langchain_openai import ChatOpenAI
 
@@ -18,7 +18,7 @@ class AgentState(TypedDict):
 
 model = ChatOpenAI(
     model="gpt-5-nano",
-    api_key="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",
+    api_key=OPENAI_API_KEY,
     temperature=0,
 ).bind_tools(LLM_TOOLS, parallel_tool_calls=False)
 
