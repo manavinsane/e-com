@@ -5,16 +5,23 @@ from langchain_groq import ChatGroq
 from langgraph.graph import StateGraph, END, START
 from app.core.config import GROQ_API_KEY
 from app.api.product import LLM_TOOLS
-
+from langchain_openai import ChatOpenAI
 
 class AgentState(TypedDict):
     messages: Annotated[list[AnyMessage], "conversation history"]
 
-model = ChatGroq(
-    model="openai/gpt-oss-120b",
-    api_key=GROQ_API_KEY,
+# model = ChatGroq(
+#     model="openai/gpt-oss-120b",
+#     api_key=GROQ_API_KEY,
+#     temperature=0,
+# ).bind_tools(LLM_TOOLS, parallel_tool_calls=False)
+
+model = ChatOpenAI(
+    model="gpt-5-nano",
+    api_key="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",
     temperature=0,
 ).bind_tools(LLM_TOOLS, parallel_tool_calls=False)
+
 
 def call_model(state: dict):
     response = model.invoke(state["messages"])

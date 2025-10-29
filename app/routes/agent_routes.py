@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from app.agents.sql_agent import generate_and_execute_select_query, fetch_database_schema
 from app.agents.sql_agent import fetch_database_schema, generate_and_execute_select_query, search_web, login_user
-from langchain.agents import AgentExecutor, create_tool_calling_agent
+# from langchain.agents import AgentExecutor, create_tool_calling_agent
+# from langchain.agents.agent_executor import AgentExecutor
+from langchain.agents import create_agent
+
+
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from app.db.database import get_session
@@ -47,22 +51,22 @@ agent_prompt2 = ChatPromptTemplate.from_messages([
 ])
 
 tools = [search_web, fetch_database_schema, generate_and_execute_select_query, login_user]
-agent = create_tool_calling_agent(llm, tools, agent_prompt)
-agent2 = create_tool_calling_agent(llm, tools, agent_prompt2)
-agent_executor = AgentExecutor(
-    agent=agent,
-    tools=tools,
-    verbose=True,
-    handle_parsing_errors=True,
-    max_iterations=5
-)
-agent_executor2 = AgentExecutor(
-    agent=agent2,
-    tools=tools,
-    verbose=True,
-    handle_parsing_errors=True,
-    max_iterations=5
-)
+agent = create_agent(llm, tools,system_prompt=agent_prompt)
+agent2 = create_agent(llm, tools,system_prompt=agent_prompt2)
+# agent_executor = AgentExecutor(
+#     agent=agent,
+#     tools=tools,
+#     verbose=True,
+#     handle_parsing_errors=True,
+#     max_iterations=5
+# )
+# agent_executor2 = AgentExecutor(
+#     agent=agent2,
+#     tools=tools,
+#     verbose=True,
+#     handle_parsing_errors=True,
+#     max_iterations=5
+# )
 
 @router.get("/smart-analytic")
 def smart_analytic(
@@ -103,7 +107,7 @@ def login_agent(
     """
     try:
         # Invoke the agent - it will decide which tools to call
-        result = agent_executor2.invoke({"input": prompt})
+        result = agent2.invoke({"input": prompt})
         
         # Extract the final output
         output = result.get("output", "")
@@ -139,7 +143,7 @@ def smart_analytics(
     """
     try:
         # Invoke the agent - it will decide which tools to call
-        result = agent_executor.invoke({"input": prompt})
+        result = agent.invoke({"input": prompt})
         
         # Extract the final output
         output = result.get("output", "")
